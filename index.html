@@ -173,9 +173,11 @@ nav.tabs button[aria-current="page"]{color:var(--lantern);background:var(--surfa
 .overlay{position:fixed;inset:0;z-index:20;background:rgba(15,12,26,.55);display:grid;align-items:end;justify-items:center}
 .sheet{width:100%;max-width:520px;max-height:88vh;overflow:auto;background:var(--surface);border-radius:22px 22px 0 0;
   padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:14px}
+.sheet{max-height:88dvh;overflow-x:hidden;outline:none}
+.sheet>*{min-width:0}
 .sheet h2{font-size:24px}
-.field{display:grid;gap:6px}
-.field input{font:inherit;font-size:20px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.field{display:grid;gap:6px;min-width:0}
+.field input{width:100%;min-width:0;font:inherit;font-size:20px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);color:var(--ink)}
 .err{color:var(--lantern);font-size:15px;min-height:1.4em;margin:0}
 .opt{display:flex;gap:8px;flex-wrap:wrap}
 .opt .chip{flex:1 1 auto}
@@ -485,7 +487,7 @@ function viewMarket(){
 let pickF=null;
 
 /* ---------- sheets ---------- */
-function openSheet(html){const s=document.getElementById('sheet');s.innerHTML=html;document.getElementById('sheetWrap').hidden=false;const f=s.querySelector('input,button');f&&f.focus()}
+function openSheet(html){const s=document.getElementById('sheet');s.innerHTML=html;s.scrollTop=0;document.getElementById('sheetWrap').hidden=false;s.tabIndex=-1;s.focus({preventScroll:true})}
 function closeSheet(){document.getElementById('sheetWrap').hidden=true;stopToss()}
 document.getElementById('sheetWrap').addEventListener('click',e=>{if(e.target.id==='sheetWrap'&&!S.toss)closeSheet()});
 
