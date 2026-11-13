@@ -1,0 +1,611 @@
+<title>食靈GO</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: phone-first game shell. Night-market header band with today's steps, one tab panel, fixed bottom nav with a lantern-red active tab. */
+:root{
+  --bg:#F3F1F8; --surface:#FFFFFF; --surface-2:#ECE8F4; --ink:#251F3A; --muted:#625B7A; --line:#D9D3E6;
+  --night:#2B2550; --on-night:#F7F2FF; --on-night-muted:#C9C0E6;
+  --lantern:#D23F2C; --on-lantern:#FFFFFF; --gold:#E39A2E; --leaf:#3F8A55; --tea:#A9724A;
+  --ok-bg:#E3F2E7; --ok-ink:#1F6236;
+  --font-display:"Huninn","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16131F; --surface:#221E2F; --surface-2:#2C2740; --ink:#F2EEF9; --muted:#AAA2C0; --line:#3A344F;
+  --night:#0F0C1A; --on-night:#F7F2FF; --on-night-muted:#B3AAD0;
+  --lantern:#F0604A; --on-lantern:#1A0F0C; --gold:#F2B451; --leaf:#6CC08A; --tea:#D29B70;
+  --ok-bg:#1D3A27; --ok-ink:#9BE0B1; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#16131F; --surface:#221E2F; --surface-2:#2C2740; --ink:#F2EEF9; --muted:#AAA2C0; --line:#3A344F;
+  --night:#0F0C1A; --on-night:#F7F2FF; --on-night-muted:#B3AAD0;
+  --lantern:#F0604A; --on-lantern:#1A0F0C; --gold:#F2B451; --leaf:#6CC08A; --tea:#D29B70;
+  --ok-bg:#1D3A27; --ok-ink:#9BE0B1; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--night)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+h1,h2,h3{font-family:var(--font-display);font-weight:400;margin:0;text-wrap:balance}
+.app{max-width:520px;margin:0 auto;min-height:100%;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--night);color:var(--on-night);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 12px}
+.lanterns{display:flex;justify-content:space-between;margin:-4px 4px 6px;height:10px}
+.lanterns i{width:10px;height:10px;border-radius:50% 50% 45% 45%;background:var(--lantern);box-shadow:0 0 8px var(--lantern)}
+.lanterns i:nth-child(3n+2){background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.top-row{display:flex;align-items:center;gap:10px}
+.brand{font-family:var(--font-display);font-size:26px;letter-spacing:.02em}
+.brand b{color:var(--gold);font-weight:400}
+.nick{margin-left:auto;background:rgba(255,255,255,.12);border:0;border-radius:999px;padding:6px 14px;color:var(--on-night);font-size:15px;display:flex;gap:6px;align-items:center}
+.today{margin-top:8px;display:flex;align-items:baseline;gap:8px;font-variant-numeric:tabular-nums}
+.today strong{font-family:var(--font-display);font-size:30px;font-weight:400}
+.today span{color:var(--on-night-muted);font-size:15px}
+.today .boost{margin-left:auto;background:var(--gold);color:#2B1A05;border-radius:999px;padding:2px 10px;font-size:13px}
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width .4s}
+
+main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;display:grid;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:12px;min-width:0}
+.card h2{font-size:22px}
+.sub{color:var(--muted);font-size:15px;margin:0}
+.eyebrow{font-size:13px;letter-spacing:.08em;color:var(--muted)}
+
+/* stations */
+.stations{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:16px}
+.chip[aria-pressed="true"]{border-color:var(--lantern);background:var(--lantern);color:var(--on-lantern)}
+.chip:disabled{opacity:.55;cursor:not-allowed}
+
+/* compass */
+.compass{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-areas:". n ." "w c e" ". s .";gap:8px}
+.dir{border:2px solid var(--line);background:var(--surface-2);border-radius:14px;padding:10px 6px;display:grid;gap:2px;justify-items:center;text-align:center;min-width:0}
+.dir .d{font-family:var(--font-display);font-size:24px;line-height:1.1}
+.dir .spot{font-size:14px;font-weight:700}
+.dir .st{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dir.want{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset}
+.dir .tag{font-size:12px;background:var(--gold);color:#2B1A05;border-radius:99px;padding:0 8px}
+.dir.n{grid-area:n}.dir.e{grid-area:e}.dir.s{grid-area:s}.dir.w{grid-area:w}
+.center{grid-area:c;display:grid;place-items:center;text-align:center}
+.center .here{font-family:var(--font-display);font-size:22px}
+.center svg{width:64px;height:66px}
+
+/* ingredient token */
+.ing{display:inline-flex;align-items:center;gap:6px;font-size:15px;white-space:nowrap}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;border:1.5px solid rgba(0,0,0,.25);flex:none;font-weight:700}
+
+/* route */
+.route-head{display:flex;gap:12px;align-items:center}
+.route-head svg{width:72px;height:74px;flex:none}
+.left-steps{font-family:var(--font-display);font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.road{position:relative;height:56px;margin-top:4px}
+.road .track{position:absolute;left:0;right:0;top:34px;height:10px;border-radius:99px;background:var(--surface-2);border:1px dashed var(--line)}
+.road .fill{position:absolute;left:0;top:34px;height:10px;border-radius:99px;background:var(--leaf);transition:width .4s}
+.road .walker{position:absolute;top:-2px;width:40px;height:42px;transform:translateX(-50%);transition:left .4s}
+.road .mark{position:absolute;top:30px;width:18px;height:18px;border-radius:50%;transform:translateX(-50%);background:var(--surface);border:2px solid var(--gold);font-size:11px;display:grid;place-items:center;font-weight:700}
+.road .mark.done{background:var(--gold);color:#2B1A05}
+.road .flag{position:absolute;right:-4px;top:12px;font-size:13px;font-weight:700;color:var(--lantern)}
+.calm{background:var(--surface-2);border-radius:12px;padding:10px 12px;font-size:15px}
+.events{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.events li{font-size:15px;padding:8px 12px;border-radius:10px;background:var(--ok-bg);color:var(--ok-ink)}
+
+/* buttons */
+.btn{border:0;border-radius:14px;padding:14px 18px;font-size:18px;font-family:var(--font-display);background:var(--lantern);color:var(--on-lantern);min-height:52px}
+.btn.ghost{background:var(--surface-2);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.small{padding:8px 14px;font-size:16px;min-height:42px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{flex:1 1 auto}
+
+/* test tools */
+.tools{border:2px dashed var(--line);background:transparent}
+.tools .btn{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);font-family:var(--font-body);font-size:16px}
+.sensor-status{font-size:14px;color:var(--muted)}
+
+/* recipes */
+.recipe{border-radius:var(--r);background:var(--surface);border:1px solid var(--line);padding:16px;display:grid;gap:12px;position:relative}
+.recipe .head{display:flex;gap:12px;align-items:center}
+.recipe .head svg{width:64px;height:66px;flex:none}
+.recipe h3{font-size:22px}
+.recipe.paper{background-image:repeating-linear-gradient(0deg,transparent 0 31px,var(--line) 31px 32px);background-color:var(--surface)}
+.need{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.need li{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border-radius:10px}
+.need .have{margin-left:auto;font-size:14px;border-radius:99px;padding:2px 10px;background:var(--surface-2);font-variant-numeric:tabular-nums}
+.need .have.ok{background:var(--ok-bg);color:var(--ok-ink)}
+.need .where{flex-basis:100%;font-size:14px;color:var(--muted);padding-left:30px}
+.locked{border-style:dashed;color:var(--muted);background:transparent}
+
+/* pantry */
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cell{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 6px;display:grid;justify-items:center;gap:4px;text-align:center}
+.cell .dot{width:34px;height:34px;font-size:16px}
+.cell b{font-family:var(--font-display);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums}
+.cell.zero{opacity:.45}
+
+/* codex */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.spirit{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:grid;justify-items:center;gap:2px;text-align:center}
+.spirit svg{width:96px;height:100px}
+.spirit h3{font-size:20px}
+.spirit .sil{filter:brightness(0) opacity(.18)}
+:root[data-theme="dark"] .spirit .sil{filter:brightness(0) invert(1) opacity(.18)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .spirit .sil{filter:brightness(0) invert(1) opacity(.18)}}
+
+/* market */
+.stalls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stall{border:0;background:var(--surface-2);border-radius:14px 14px 10px 10px;padding:0 0 8px;display:grid;justify-items:center;gap:4px;overflow:hidden;min-height:150px;align-content:start}
+.stall .awn{width:100%;height:18px;background:repeating-linear-gradient(90deg,var(--lantern) 0 14px,var(--surface) 14px 28px)}
+.stall svg{width:72px;height:74px}
+.stall .empty{margin-top:24px;font-size:14px;color:var(--muted)}
+.mlog{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.mlog li{font-size:15px;padding:8px 12px;border-radius:10px;background:var(--surface-2)}
+.mlog li.me{background:var(--ok-bg);color:var(--ok-ink)}
+.sticker{border:0;border-radius:14px;padding:10px 4px;font-family:var(--font-display);font-size:18px;color:#2B1A05}
+.st-讚啦{background:#F6C453}.st-好吃{background:#F59E7E}.st-一起走{background:#9ED5A8}.st-加油{background:#F7A6C2}.st-謝謝{background:#A9C8F5}.st-晚安{background:#C7B6F2}
+.badge{display:inline-block;border-radius:10px;padding:2px 10px;font-family:var(--font-display);color:#2B1A05;font-size:15px}
+.friends{display:flex;gap:8px;flex-wrap:wrap}
+
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));padding-block:6px calc(6px + env(safe-area-inset-bottom,0px))}
+nav.tabs .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+nav.tabs button{border:0;background:transparent;border-radius:12px;padding:6px 0 4px;display:grid;justify-items:center;gap:2px;font-size:14px;color:var(--muted)}
+nav.tabs button svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-current="page"]{color:var(--lantern);background:var(--surface-2)}
+
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(15,12,26,.55);display:grid;align-items:end;justify-items:center}
+.sheet{width:100%;max-width:520px;max-height:88vh;overflow:auto;background:var(--surface);border-radius:22px 22px 0 0;
+  padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:14px}
+.sheet h2{font-size:24px}
+.field{display:grid;gap:6px}
+.field input{font:inherit;font-size:20px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.err{color:var(--lantern);font-size:15px;min-height:1.4em;margin:0}
+.opt{display:flex;gap:8px;flex-wrap:wrap}
+.opt .chip{flex:1 1 auto}
+
+/* ring toss */
+.toss-stage{position:relative;height:190px;background:linear-gradient(var(--surface-2),var(--surface));border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+.bottles{position:absolute;left:0;right:0;bottom:12px;display:grid;grid-template-columns:repeat(3,1fr)}
+.bottle{justify-self:center;display:grid;justify-items:center;gap:4px}
+.bottle .neck{width:14px;height:26px;background:#7FB8A4;border-radius:4px 4px 0 0;border:2px solid #2F5E4F;border-bottom:0}
+.bottle .body{width:46px;height:62px;background:#9ED1BF;border:2px solid #2F5E4F;border-radius:12px;display:grid;place-items:center;font-family:var(--font-display);font-size:18px;color:#1D3D33}
+.bottle.win .body{background:var(--gold);color:#2B1A05}
+.ring{position:absolute;top:14px;left:0;width:54px;height:20px;border-radius:50%;border:6px solid var(--lantern);transition:none}
+.ring.drop{transition:transform .5s cubic-bezier(.3,1.4,.6,1)}
+.pop{animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+.born svg{width:150px;height:156px;justify-self:center}
+.born{justify-items:center;text-align:center}
+
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;background:var(--night);color:var(--on-night);border-radius:14px;padding:12px 18px;font-size:16px;max-width:min(92vw,460px);box-shadow:0 6px 24px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
+</defs></svg>
+
+<div class="app">
+  <header class="top">
+    <div class="lanterns" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="top-row">
+      <div class="brand">食靈<b>GO</b></div>
+      <button class="nick" id="nickBtn" data-act="settings" aria-label="設定與暱稱"></button>
+    </div>
+    <div class="today" id="today"></div>
+    <div class="bar"><i id="todayBar"></i></div>
+  </header>
+  <main id="main"></main>
+</div>
+
+<nav class="tabs" aria-label="主要選單"><div class="in" id="tabs"></div></nav>
+<div class="overlay" id="sheetWrap" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div id="toast" hidden role="status"></div>
+
+<script>
+/* ---------- data ---------- */
+const ING = {
+  '雞肉':{c:'#F0B49A',t:'#4A2414'}, '地瓜粉':{c:'#EFE7D6',t:'#5A4B2E'}, '九層塔':{c:'#5C9A4B',t:'#fff'},
+  '紅茶':{c:'#A3502B',t:'#fff'}, '鮮奶':{c:'#FAFAF4',t:'#3B3B33'}, '粉圓':{c:'#3B2A22',t:'#fff'},
+  '地瓜':{c:'#E58A3A',t:'#fff'}, '黑糖':{c:'#6B3A1F',t:'#fff'}, '滷肉':{c:'#8A4B2A',t:'#fff'},
+  '刈包皮':{c:'#F7F3EA',t:'#4A4235'}, '花生':{c:'#D2A061',t:'#3A2410'}, '蒜頭':{c:'#EFE6D2',t:'#4A4235'},
+  '豆腐':{c:'#F1DFA8',t:'#4A3A12'}, '泡菜':{c:'#CFE08A',t:'#33410F'}, '黃豆':{c:'#E8C65A',t:'#3D300A'}
+};
+const DIRNAME = {N:'北',E:'東',S:'南',W:'西'};
+const STATIONS = {
+  taipei:{name:'台北',unlock:0,dirs:{
+    N:{spot:'士林',steps:800,ings:['粉圓']},
+    E:{spot:'饒河街',steps:900,ings:['雞肉','九層塔']},
+    S:{spot:'公館',steps:600,ings:['地瓜粉']},
+    W:{spot:'西門町',steps:1100,ings:['紅茶','鮮奶']}}},
+  hsinchu:{name:'新竹',unlock:2,dirs:{
+    N:{spot:'竹北',steps:700,ings:['花生']},
+    E:{spot:'東門市場',steps:1000,ings:['地瓜','黑糖']},
+    S:{spot:'城隍廟',steps:900,ings:['滷肉','刈包皮']},
+    W:{spot:'南寮漁港',steps:1200,ings:['蒜頭']}}},
+  taichung:{name:'台中',unlock:4,dirs:{
+    N:{spot:'豐原',steps:800,ings:['蒜頭']},
+    E:{spot:'一中街',steps:900,ings:['豆腐','泡菜']},
+    S:{spot:'忠孝路',steps:800,ings:['黃豆']},
+    W:{spot:'逢甲',steps:1000,ings:['花生','地瓜粉']}}}
+};
+const RECIPES = [
+  {id:'yansuji',food:'鹽酥雞',name:'酥酥',ings:['雞肉','地瓜粉','九層塔'],trait:'聽到油鍋聲就會跳舞，最愛撒胡椒鹽。'},
+  {id:'boba',food:'珍奶',name:'波波',ings:['紅茶','鮮奶','粉圓'],trait:'走路時肚子裡的粉圓會咚咚響。'},
+  {id:'qiu',food:'地瓜球',name:'球球',ings:['地瓜','地瓜粉','黑糖'],trait:'被壓一下會變大，越壓越開心。'},
+  {id:'guabao',food:'刈包',name:'包包',ings:['刈包皮','滷肉','花生'],trait:'嘴巴很大，喜歡把朋友的話都包起來收好。'},
+  {id:'stinky',food:'臭豆腐',name:'阿臭',ings:['豆腐','泡菜','蒜頭'],trait:'聞起來很兇，其實是最溫柔的那一個。'},
+  {id:'douhua',food:'豆花',name:'花花',ings:['黃豆','黑糖','花生'],trait:'夏天冰的、冬天熱的，心情跟著天氣換。'}
+];
+const STICKERS = ['讚啦','好吃','一起走','加油','謝謝','晚安'];
+const FRIENDS = ['秀英阿嬤','小明爸','Amy'];
+const GOALS = [{v:3000,l:'輕鬆走 3,000'},{v:6000,l:'一般 6,000'},{v:9000,l:'通勤族 9,000'}];
+const BANNED = ['line','賴','加我','投資','匯款','私訊','帳號','客服','飆股','老師'];
+const KEY = 'shilingGO_v1';
+
+/* ---------- characters (Q版, hand-drawn line) ---------- */
+const OL = '#3B2A22';
+function face(cx,cy){return `<g><ellipse cx="${cx-11}" cy="${cy}" rx="3.4" ry="4" fill="${OL}"/><ellipse cx="${cx+11}" cy="${cy}" rx="3.4" ry="4" fill="${OL}"/>
+<circle cx="${cx-10}" cy="${cy-1.4}" r="1.2" fill="#fff"/><circle cx="${cx+12}" cy="${cy-1.4}" r="1.2" fill="#fff"/>
+<ellipse cx="${cx-18}" cy="${cy+7}" rx="4.5" ry="2.6" fill="#F28B8B" opacity=".75"/><ellipse cx="${cx+18}" cy="${cy+7}" rx="4.5" ry="2.6" fill="#F28B8B" opacity=".75"/>
+<path d="M${cx-5} ${cy+6} q5 5 10 0" stroke="${OL}" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>`}
+function limbs(ay,axL,axR,ly,lxL,lxR,hand){return `<g stroke="${OL}" stroke-width="3.2" stroke-linecap="round" fill="none">
+<path d="M${axL} ${ay} q-9 1 -12 10"/><path d="M${axR} ${ay} q9 1 12 10"/><path d="M${lxL} ${ly} l-2 11"/><path d="M${lxR} ${ly} l2 11"/></g>
+<circle cx="${axL-12}" cy="${ay+11}" r="4.2" fill="${hand}" stroke="${OL}" stroke-width="2.2"/><circle cx="${axR+12}" cy="${ay+11}" r="4.2" fill="${hand}" stroke="${OL}" stroke-width="2.2"/>
+<ellipse cx="${lxL-4}" cy="${ly+12}" rx="7" ry="3.8" fill="${OL}"/><ellipse cx="${lxR+4}" cy="${ly+12}" rx="7" ry="3.8" fill="${OL}"/>`}
+const BODIES = {
+  yansuji:()=>`${limbs(70,30,90,94,50,70,'#E7A23B')}
+<path d="M28 62 C24 42 40 30 58 33 C66 26 86 30 91 45 C99 54 96 77 88 87 C79 98 44 98 34 90 C26 84 28 72 28 62Z" fill="#E7A23B" stroke="${OL}" stroke-width="3"/>
+<g fill="#C47A22"><circle cx="40" cy="48" r="2"/><circle cx="78" cy="44" r="2.2"/><circle cx="84" cy="70" r="2"/><circle cx="38" cy="78" r="2.2"/><circle cx="62" cy="86" r="1.8"/></g>
+<path d="M58 33 C54 20 64 14 72 18 C70 26 64 31 58 33Z" fill="#5C9A4B" stroke="${OL}" stroke-width="2.4"/>${face(60,62)}`,
+  boba:()=>`${limbs(66,38,82,98,52,68,'#E9C9A0')}
+<line x1="64" y1="34" x2="74" y2="8" stroke="#E86A8C" stroke-width="7" stroke-linecap="round"/><line x1="64" y1="34" x2="74" y2="8" stroke="${OL}" stroke-width="1.4" opacity=".4"/>
+<path d="M36 40 L84 40 L78 100 L42 100Z" fill="#E9C9A0" stroke="${OL}" stroke-width="3" stroke-linejoin="round"/>
+<path d="M33 40 Q60 22 87 40Z" fill="#F7F3EE" stroke="${OL}" stroke-width="3" stroke-linejoin="round"/>
+<g fill="${OL}"><circle cx="50" cy="92" r="4"/><circle cx="60" cy="94" r="4"/><circle cx="70" cy="92" r="4"/><circle cx="55" cy="86" r="3.6"/><circle cx="66" cy="86" r="3.6"/></g>${face(60,62)}`,
+  qiu:()=>`${limbs(66,30,90,90,50,70,'#F0B44A')}
+<circle cx="60" cy="62" r="32" fill="#F0B44A" stroke="${OL}" stroke-width="3"/>
+<path d="M42 44 Q50 36 60 36" stroke="#FFE2A3" stroke-width="5" fill="none" stroke-linecap="round"/>
+<g fill="#C9842A"><circle cx="78" cy="48" r="1.8"/><circle cx="44" cy="80" r="1.8"/><circle cx="80" cy="78" r="1.6"/></g>${face(60,64)}`,
+  guabao:()=>`${limbs(72,24,96,90,48,72,'#F7F3EA')}
+<path d="M22 70 C22 42 98 42 98 70 C98 94 22 94 22 70Z" fill="#F7F3EA" stroke="${OL}" stroke-width="3"/>
+<path d="M28 58 Q60 40 92 58 Q60 66 28 58Z" fill="#8A4B2A" stroke="${OL}" stroke-width="2.4"/>
+<path d="M40 52 q4 -8 8 -2 M66 48 q5 -8 9 -1 M54 50 q3 -6 6 -1" stroke="#5C9A4B" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+<g fill="#D2A061"><circle cx="46" cy="56" r="1.6"/><circle cx="60" cy="52" r="1.6"/><circle cx="74" cy="55" r="1.6"/><circle cx="84" cy="57" r="1.4"/></g>${face(60,74)}`,
+  stinky:()=>`${limbs(72,30,90,96,48,72,'#D9953A')}
+<rect x="30" y="44" width="60" height="54" rx="12" fill="#D9953A" stroke="${OL}" stroke-width="3"/>
+<rect x="36" y="50" width="48" height="42" rx="8" fill="#E8B05A" opacity=".7"/>
+<path d="M34 46 Q40 28 52 36 Q58 24 68 34 Q80 26 86 46Z" fill="#CFE08A" stroke="${OL}" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M66 32 q4 -6 9 -3" stroke="#D9432F" stroke-width="4" fill="none" stroke-linecap="round"/>${face(60,72)}`,
+  douhua:()=>`${limbs(72,28,92,96,50,70,'#F5F1E6')}
+<path d="M24 58 Q24 100 60 100 Q96 100 96 58Z" fill="#F5F1E6" stroke="${OL}" stroke-width="3" stroke-linejoin="round"/>
+<path d="M27 70 Q60 78 93 70" stroke="#6A8FC7" stroke-width="3.4" fill="none"/>
+<ellipse cx="60" cy="58" rx="36" ry="10" fill="#FFFDF8" stroke="${OL}" stroke-width="3"/>
+<path d="M38 58 q10 -6 20 0 q10 6 22 -1" stroke="#C9832E" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/>
+<g fill="#D2A061" stroke="${OL}" stroke-width="1.4"><ellipse cx="48" cy="55" rx="3.4" ry="2.4"/><ellipse cx="70" cy="60" rx="3.4" ry="2.4"/><ellipse cx="62" cy="53" rx="3" ry="2.2"/></g>${face(60,82)}`
+};
+function spiritSVG(id,cls=''){return `<svg viewBox="0 0 120 124" class="${cls}" role="img" aria-label="${(RECIPES.find(r=>r.id===id)||{}).food||''}"><g filter="url(#rough)">${BODIES[id]()}</g></svg>`}
+
+/* ---------- state ---------- */
+function defaults(){return {v:1,nick:'小走',nickAt:0,goal:6000,clock:0,day:'',today:0,station:'taipei',route:null,toss:null,
+  pantry:{'地瓜粉':1},cooked:{},order:0,stalls:[null,null,null],mlog:[],stickers:{},boostUntil:0,visitAcc:0,tab:'walk'}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.v===1)return Object.assign(defaults(),s)}catch(e){}return defaults()}
+let S = load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const now=()=>Date.now()+S.clock;
+const dayKey=t=>{const d=new Date(t);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+function checkDay(){const k=dayKey(now());if(S.day!==k){S.day=k;S.today=0}}
+checkDay();
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Math.round(n).toLocaleString('zh-TW');
+const scale=()=>S.goal/6000;
+const needSteps=base=>Math.max(200,Math.round(base*scale()/10)*10);
+const uniqCooked=()=>Object.keys(S.cooked).length;
+const boosted=()=>now()<S.boostUntil;
+function curRecipe(){return RECIPES.find((r,i)=>i<=S.order&&!S.cooked[r.id])||null}
+function wanted(){const r=curRecipe();return r?r.ings.filter(i=>!(S.pantry[i]>0)):[]}
+function ingTok(name,label=true){const g=ING[name];return `<span class="ing"><span class="dot" style="background:${g.c};color:${g.t}">${esc(name[0])}</span>${label?esc(name):''}</span>`}
+function whereIs(name){const out=[];for(const [k,st] of Object.entries(STATIONS))for(const [d,v] of Object.entries(st.dirs))if(v.ings.includes(name))out.push({k,st,d,v});return out}
+function stationOpen(k){return uniqCooked()>=STATIONS[k].unlock}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+
+/* ---------- steps ---------- */
+function addSteps(n){
+  checkDay();
+  S.today+=n;
+  if(S.route&&!S.toss){
+    const R=S.route;
+    R.walked+=n*(boosted()?1.5:1);
+    for(const m of R.marks){if(!m.done&&R.walked>=m.at*R.need){m.done=true;surprise(m)}}
+    if(R.walked>=R.need){arrive();}
+  }
+  S.visitAcc+=n;
+  while(S.visitAcc>=1200){S.visitAcc-=1200;visit()}
+  save();scheduleRender();
+}
+function surprise(m){
+  const R=S.route;const roll=Math.random();
+  if(roll<.5){
+    let pool=wanted().filter(i=>i!==R.ing);
+    if(!pool.length)pool=Object.values(STATIONS[R.st].dirs).flatMap(v=>v.ings).filter(i=>i!==R.ing);
+    const g=pool[Math.floor(Math.random()*pool.length)];
+    const who=['路口賣菜的阿姨','公園下棋的阿伯','早餐店老闆','巷口的雜貨店'][Math.floor(Math.random()*4)];
+    S.pantry[g]=(S.pantry[g]||0)+1;m.text=`${who}送你 1 份「${g}」`;
+  }else if(roll<.75){
+    const s=STICKERS[Math.floor(Math.random()*STICKERS.length)];
+    S.stickers[s]=(S.stickers[s]||0)+1;m.text=`路上撿到貼圖「${s}」`;
+  }else{
+    const cut=Math.round(R.need*.1/10)*10;R.walked+=cut;m.text=`發現小巷捷徑，少走 ${fmt(cut)} 步`;
+  }
+  toast('路上驚喜！'+m.text);
+}
+function arrive(){
+  const R=S.route;S.toss={ing:R.ing,spot:R.spot};
+  vibrate();toast(`抵達${R.spot}！來套圈圈拿「${R.ing}」`);
+  setTimeout(openToss,400);
+}
+function vibrate(){try{navigator.vibrate&&navigator.vibrate([120,60,120])}catch(e){}}
+function startRoute(dir,ing){
+  const v=STATIONS[S.station].dirs[dir];
+  const need=needSteps(v.steps);
+  const n=Math.random()<.5?1:2;const marks=[];
+  for(let i=0;i<n;i++)marks.push({at:.25+Math.random()*.6,done:false,text:''});
+  marks.sort((a,b)=>a.at-b.at);
+  S.route={st:S.station,dir,spot:v.spot,ing,need,walked:0,marks};
+  save();closeSheet();render();
+  toast(`出發往${DIRNAME[dir]}！手機放口袋走就好`);
+}
+
+/* ---------- night market visits ---------- */
+function visit(){
+  const filled=S.stalls.filter(Boolean);if(!filled.length)return;
+  const f=FRIENDS[Math.floor(Math.random()*FRIENDS.length)];
+  const id=filled[Math.floor(Math.random()*filled.length)];
+  const s=STICKERS[Math.floor(Math.random()*STICKERS.length)];
+  S.stickers[s]=(S.stickers[s]||0)+1;
+  S.mlog.unshift({f,food:RECIPES.find(r=>r.id===id).food,s});S.mlog=S.mlog.slice(0,20);
+  toast(`${f} 來逛你的${RECIPES.find(r=>r.id===id).food}攤，送你「${s}」`);
+}
+
+/* ---------- render ---------- */
+let rq=false;
+function scheduleRender(){if(rq)return;rq=true;requestAnimationFrame(()=>{rq=false;render()})}
+const TABS=[
+  {k:'walk',l:'走路',i:'<path d="M13 4a2 2 0 1 0 0 .01M9 21l2-6 3 3v4M7 12l3-4 4 2 3 3M10 8l-1 5"/>'},
+  {k:'recipe',l:'食譜',i:'<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h6"/>'},
+  {k:'pantry',l:'食材櫃',i:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 12h16M10 7.5h4M10 16.5h4"/>'},
+  {k:'codex',l:'圖鑑',i:'<path d="M4 5c3-1 5-1 8 1 3-2 5-2 8-1v14c-3-1-5-1-8 1-3-2-5-2-8-1z"/><path d="M12 6v14"/>'},
+  {k:'market',l:'夜市',i:'<path d="M3 9l2-5h14l2 5"/><path d="M3 9c0 2 4 2 4 0 0 2 5 2 5 0 0 2 5 2 5 0 0 2 4 2 4 0"/><path d="M5 11v9h14v-9"/>'}
+];
+function render(){
+  checkDay();
+  document.getElementById('nickBtn').innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 5-6 8-6s7 2 8 6"/></svg>${esc(S.nick)}`;
+  const pct=Math.min(100,S.today/S.goal*100);
+  document.getElementById('today').innerHTML=`<span>今天</span><strong>${fmt(S.today)}</strong><span>/ ${fmt(S.goal)} 步</span>${boosted()?`<span class="boost">加成 1.5× 剩 ${Math.ceil((S.boostUntil-now())/60000)} 分</span>`:''}`;
+  document.getElementById('todayBar').style.width=pct+'%';
+  document.getElementById('tabs').innerHTML=TABS.map(t=>`<button data-act="tab" data-k="${t.k}" ${S.tab===t.k?'aria-current="page"':''}><svg viewBox="0 0 24 24">${t.i}</svg>${t.l}</button>`).join('');
+  const m=document.getElementById('main');
+  m.innerHTML=({walk:viewWalk,recipe:viewRecipe,pantry:viewPantry,codex:viewCodex,market:viewMarket})[S.tab]();
+}
+function guideId(){const c=RECIPES.filter(r=>S.cooked[r.id]);return c.length?c[c.length-1].id:'yansuji'}
+
+function viewWalk(){
+  let h='';
+  const st=STATIONS[S.station];
+  h+=`<section class="card"><div class="eyebrow">目前據點 · 台灣環島第一章</div><div class="stations">${Object.entries(STATIONS).map(([k,v])=>{
+    const open=stationOpen(k);
+    return `<button class="chip" data-act="station" data-k="${k}" aria-pressed="${S.station===k}" ${(!open||S.route)&&S.station!==k?'disabled':''}>${v.name}${open?'':'（未開）'}</button>`}).join('')}</div>
+    <p class="sub">${Object.entries(STATIONS).filter(([k])=>!stationOpen(k)).map(([k,v])=>`做出 ${v.unlock} 隻食靈解鎖${v.name}`).join('，')||'三個據點都開了'}${S.route?'。走在路上時不能換據點':''}</p></section>`;
+
+  if(S.toss){
+    h+=`<section class="card"><h2>抵達${esc(S.toss.spot)}！</h2><p class="sub">套圈圈決定拿到幾份「${esc(S.toss.ing)}」，一定拿得到。</p><button class="btn" data-act="toss">來套圈圈</button></section>`;
+  }else if(S.route){
+    const R=S.route,left=Math.max(0,R.need-R.walked),p=Math.min(1,R.walked/R.need);
+    h+=`<section class="card"><div class="route-head">${spiritSVG(guideId())}<div><div class="eyebrow">往${DIRNAME[R.dir]} · ${esc(STATIONS[R.st].name)} → ${esc(R.spot)}</div><div class="left-steps">${fmt(left)}</div><div class="sub">步後拿到 ${ingTok(R.ing)}</div></div></div>
+      <div class="road" aria-hidden="true"><div class="track"></div><div class="fill" style="width:${p*100}%"></div>
+      ${R.marks.map((mk,i)=>`<div class="mark ${mk.done?'done':''}" style="left:${mk.at*100}%">${mk.done?'!':'?'}</div>`).join('')}
+      <div class="walker" style="left:${Math.max(4,Math.min(96,p*100))}%">${spiritSVG(guideId())}</div><div class="flag">${esc(R.spot)}</div></div>
+      <div class="calm">手機放口袋走就好。路上有驚喜或抵達時，手機會震動通知你。${boosted()?' 步數加成中，每步算 1.5 步。':''}</div>
+      ${R.marks.some(x=>x.done)?`<ul class="events">${R.marks.filter(x=>x.done).map(x=>`<li>${esc(x.text)}</li>`).join('')}</ul>`:''}
+    </section>`;
+  }else{
+    const want=wanted();
+    const cell=d=>{const v=st.dirs[d];const w=v.ings.some(i=>want.includes(i));
+      return `<button class="dir ${d.toLowerCase()} ${w?'want':''}" data-act="dir" data-d="${d}"><span class="d">${DIRNAME[d]}</span><span class="spot">${esc(v.spot)}</span>
+      <span>${v.ings.map(i=>ingTok(i,false)).join(' ')}</span><span class="st">${fmt(needSteps(v.steps))} 步</span>${w?'<span class="tag">食譜需要</span>':''}</button>`};
+    const r=curRecipe();
+    h+=`<section class="card"><h2>要往哪裡走？</h2><p class="sub">${r?`正在做「${r.food}」，還缺 ${want.length?want.map(i=>ingTok(i)).join('、'):'0 樣，去食譜頁做料理吧'}`:'六隻食靈都做出來了，隨意走走收集食材'}</p>
+    <div class="compass">${['N','W','E','S'].map(cell).join('')}<div class="center">${spiritSVG(guideId())}<span class="here">${st.name}</span></div></div>
+    <p class="sub">方位只是遊戲裡的地圖，現實中往哪走都可以。不記錄你的位置。</p></section>`;
+  }
+
+  h+=`<section class="card tools"><div class="eyebrow">原型測試工具</div>
+    <div class="row"><button class="btn small" data-act="steps" data-n="100">+100 步</button><button class="btn small" data-act="steps" data-n="500">+500 步</button><button class="btn small" data-act="ff">快轉 10 分鐘（+1,000 步）</button></div>
+    <div class="row"><button class="btn small" data-act="sensor">${sensorOn?'停止手機計步':'用手機感測器計步'}</button><button class="btn small" data-act="boost">試用 1.5× 加成 1 小時</button><button class="btn small" data-act="day">時間快轉 1 天</button></div>
+    <p class="sensor-status" id="sensorStatus">${esc(sensorMsg)}</p></section>`;
+  return h;
+}
+
+function viewRecipe(){
+  let h='<section class="card"><h2>食譜</h2><p class="sub">收齊食譜上的食材就能做料理，做出來就是一隻食靈。做完會拿到下一張食譜。</p></section>';
+  RECIPES.forEach((r,i)=>{
+    if(i>S.order){h+=`<div class="recipe locked"><div class="head"><div><div class="eyebrow">第 ${i+1} 張食譜</div><h3>？？？</h3><p class="sub">做出上一道料理就會拿到</p></div></div></div>`;return}
+    const ready=r.ings.every(x=>S.pantry[x]>0);
+    h+=`<div class="recipe paper"><div class="head">${spiritSVG(r.id,S.cooked[r.id]?'':'sil')}<div><div class="eyebrow">第 ${i+1} 張食譜${S.cooked[r.id]?` · 已做 ${S.cooked[r.id]} 次`:''}</div><h3>${r.food}</h3></div></div>
+    <ul class="need">${r.ings.map(x=>{const have=S.pantry[x]||0;const w=whereIs(x).map(o=>`${o.st.name}往${DIRNAME[o.d]}・${o.v.spot} ${fmt(needSteps(o.v.steps))} 步${stationOpen(o.k)?'':'（未解鎖）'}`).join('；');
+      return `<li>${ingTok(x)}<span class="have ${have?'ok':''}">有 ${have} 份</span><span class="where">${w}</span></li>`}).join('')}</ul>
+    <button class="btn" data-act="cook" data-id="${r.id}" ${ready?'':'disabled'}>${ready?'開始料理':'食材還沒收齊'}</button></div>`;
+  });
+  h+=`<div class="recipe locked"><div class="head"><div><div class="eyebrow">隱藏食譜</div><h3>夜市限定套組</h3><p class="sub">正式版以固定價格販售，買了一樣要走路收集食材才做得出來。</p></div></div></div>`;
+  return h;
+}
+function viewPantry(){
+  const names=Object.keys(ING);
+  return `<section class="card"><h2>食材櫃</h2><p class="sub">做料理時會用掉食譜上的每樣各 1 份，多的會留在這裡。</p>
+  <div class="grid3">${names.map(n=>{const c=S.pantry[n]||0;return `<div class="cell ${c?'':'zero'}">${ingTok(n,false)}<span>${n}</span><b>${c}</b></div>`}).join('')}</div></section>`;
+}
+function viewCodex(){
+  return `<section class="card"><h2>食靈圖鑑</h2><p class="sub">已收集 ${uniqCooked()} / ${RECIPES.length}。台灣環島第一章。</p></section>
+  <div class="grid2">${RECIPES.map(r=>{const c=S.cooked[r.id];return `<div class="spirit">${spiritSVG(r.id,c?'':'sil')}<h3>${c?r.name:'？？？'}</h3><div class="sub">${c?`${r.food} · 收集 ${c} 次`:r.food}</div>${c?`<p class="sub">${r.trait}</p>`:''}</div>`}).join('')}</div>`;
+}
+function viewMarket(){
+  const mine=RECIPES.filter(r=>S.cooked[r.id]);
+  let h=`<section class="card"><h2>我的夜市攤位</h2><p class="sub">把食靈擺上攤位，好友走路時會來逛，順手送你貼圖。</p>
+  <div class="stalls">${S.stalls.map((id,i)=>`<button class="stall" data-act="stall" data-i="${i}" aria-label="攤位 ${i+1}"><div class="awn"></div>${id?spiritSVG(id)+`<span>${RECIPES.find(r=>r.id===id).food}</span>`:`<span class="empty">${mine.length?'點一下擺攤':'先做出食靈'}</span>`}</button>`).join('')}</div></section>`;
+  h+=`<section class="card"><h2>送貼圖給好友</h2><p class="sub">只能送固定貼圖，不能打字。好友只能面對面掃 QR 碼加入。下面是範例好友。</p>
+  <div class="friends">${FRIENDS.map(f=>`<button class="chip" data-act="pickf" data-f="${esc(f)}" aria-pressed="${pickF===f}">${esc(f)}</button>`).join('')}</div>
+  <div class="grid3">${STICKERS.map(s=>`<button class="sticker st-${s}" data-act="send" data-s="${s}" ${pickF?'':'disabled'}>${s}</button>`).join('')}</div>
+  ${pickF?'':'<p class="sub">先選一位好友。</p>'}</section>`;
+  const got=Object.entries(S.stickers).filter(([,n])=>n>0);
+  h+=`<section class="card"><h2>收到的貼圖</h2>${got.length?`<div class="row">${got.map(([s,n])=>`<span class="badge st-${s}">${s} ×${n}</span>`).join('')}</div>`:'<p class="sub">還沒有。走路時可能在路上撿到，擺攤後好友也會送。</p>'}
+  ${S.mlog.length?`<ul class="mlog">${S.mlog.slice(0,8).map(l=>l.me?`<li class="me">你送「${esc(l.s)}」給 ${esc(l.f)}</li>`:`<li>${esc(l.f)} 來逛${esc(l.food)}攤，送你「${esc(l.s)}」</li>`).join('')}</ul>`:''}</section>`;
+  return h;
+}
+let pickF=null;
+
+/* ---------- sheets ---------- */
+function openSheet(html){const s=document.getElementById('sheet');s.innerHTML=html;document.getElementById('sheetWrap').hidden=false;const f=s.querySelector('input,button');f&&f.focus()}
+function closeSheet(){document.getElementById('sheetWrap').hidden=true;stopToss()}
+document.getElementById('sheetWrap').addEventListener('click',e=>{if(e.target.id==='sheetWrap'&&!S.toss)closeSheet()});
+
+function sheetDir(d){
+  const v=STATIONS[S.station].dirs[d];const want=wanted();
+  openSheet(`<div class="eyebrow">${STATIONS[S.station].name} 往${DIRNAME[d]}</div><h2>${esc(v.spot)}</h2>
+  <p class="sub">走 <b>${fmt(needSteps(v.steps))}</b> 步就到。出發後要走到才能換方向。</p>
+  <div class="field"><span>要拿哪一樣？</span><div class="opt">${v.ings.map(i=>`<button class="chip" data-act="go" data-d="${d}" data-i="${i}">${ingTok(i)}${want.includes(i)?'（食譜需要）':''}</button>`).join('')}</div></div>
+  <button class="btn ghost" data-act="close">再想想</button>`);
+}
+function sheetSettings(){
+  const next=S.nickAt?S.nickAt+5*864e5:0;const can=!next||now()>=next;
+  openSheet(`<h2>設定</h2>
+  <div class="field"><label for="nickIn">暱稱（最多 5 個字，只能用中文或英文）</label><input id="nickIn" maxlength="5" value="${esc(S.nick)}" ${can?'':'disabled'} autocomplete="off">
+  <p class="err" id="nickErr">${can?'':`改過暱稱後要等 5 天。${new Date(next).toLocaleDateString('zh-TW')} 之後可以再改。`}</p>
+  <button class="btn" data-act="saveNick" ${can?'':'disabled'}>儲存暱稱</button></div>
+  <div class="field"><span>每日目標（會調整路線步數）</span><div class="opt">${GOALS.map(g=>`<button class="chip" data-act="goal" data-v="${g.v}" aria-pressed="${S.goal===g.v}">${g.l}</button>`).join('')}</div></div>
+  <p class="sub">這個原型只把進度存在這台裝置的瀏覽器裡，不記錄位置，也不上傳任何資料。</p>
+  <div class="row"><button class="btn ghost" data-act="close">完成</button><button class="btn ghost" data-act="reset">清除進度</button></div>`);
+}
+function checkNick(v){
+  v=v.trim();
+  if(!v)return '請輸入暱稱。';
+  if([...v].length>5)return '最多 5 個字。';
+  if(!/^[一-鿿A-Za-z]+$/.test(v))return '只能用中文或英文字母，不能有數字、符號或網址。';
+  const low=v.toLowerCase();if(BANNED.some(b=>low.includes(b)))return '這個暱稱含有不能使用的字，請換一個。';
+  return '';
+}
+function sheetStall(i){
+  const mine=RECIPES.filter(r=>S.cooked[r.id]);
+  if(!mine.length){toast('先做出一隻食靈才能擺攤');return}
+  openSheet(`<h2>攤位 ${i+1} 要擺什麼？</h2><div class="grid3">${mine.map(r=>`<button class="stall" data-act="putStall" data-i="${i}" data-id="${r.id}"><div class="awn"></div>${spiritSVG(r.id)}<span>${r.food}</span></button>`).join('')}</div>
+  <div class="row">${S.stalls[i]?`<button class="btn ghost" data-act="putStall" data-i="${i}" data-id="">收攤</button>`:''}<button class="btn ghost" data-act="close">取消</button></div>`);
+}
+
+/* ---------- ring toss ---------- */
+let tossRaf=0,tossX=0,tossStart=0,thrown=false;
+function openToss(){
+  if(!S.toss)return;thrown=false;
+  openSheet(`<div class="eyebrow">抵達${esc(S.toss.spot)}</div><h2>套圈圈拿「${esc(S.toss.ing)}」</h2>
+  <p class="sub">圈圈套中哪一瓶，就拿幾份。一定拿得到。</p>
+  <div class="toss-stage" id="stage"><div class="ring" id="ring"></div>
+  <div class="bottles">${[1,2,3].map(n=>`<div class="bottle" data-n="${n}"><div class="neck"></div><div class="body">${n} 份</div></div>`).join('')}</div></div>
+  <div id="tossOut" class="row"><button class="btn" data-act="throw" id="throwBtn">丟圈圈</button></div>`);
+  tossStart=performance.now();
+  const period=matchMedia('(prefers-reduced-motion: reduce)').matches?2600:1500;
+  const tick=t=>{const st=document.getElementById('stage'),ring=document.getElementById('ring');if(!st||!ring)return;
+    const p=((t-tossStart)/period)%2;tossX=p<1?p:2-p;ring.style.transform=`translateX(${tossX*(st.clientWidth-54)}px)`;tossRaf=requestAnimationFrame(tick)};
+  tossRaf=requestAnimationFrame(tick);
+}
+function stopToss(){cancelAnimationFrame(tossRaf)}
+function doThrow(){
+  if(thrown||!S.toss)return;thrown=true;stopToss();
+  const st=document.getElementById('stage'),ring=document.getElementById('ring');
+  const idx=Math.min(2,Math.floor(tossX*3));const n=idx+1;
+  const b=st.querySelectorAll('.bottle')[idx];const sr=st.getBoundingClientRect(),br=b.getBoundingClientRect();
+  ring.classList.add('drop');ring.style.transform=`translate(${br.left-sr.left+br.width/2-27}px,${br.top-sr.top+6}px)`;
+  setTimeout(()=>{b.classList.add('win');
+    const ing=S.toss.ing;S.pantry[ing]=(S.pantry[ing]||0)+n;S.toss=null;S.route=null;save();
+    document.getElementById('tossOut').innerHTML=`<p class="pop" style="margin:0;font-size:20px;flex-basis:100%">拿到 ${n} 份 ${ingTok(ing)}，已放進食材櫃！</p><button class="btn" data-act="tossDone">好</button>`;
+    render();
+  },560);
+}
+
+/* ---------- cooking ---------- */
+function cook(id){
+  const r=RECIPES.find(x=>x.id===id);if(!r.ings.every(x=>S.pantry[x]>0))return;
+  r.ings.forEach(x=>S.pantry[x]--);
+  const first=!S.cooked[id];S.cooked[id]=(S.cooked[id]||0)+1;
+  const idx=RECIPES.indexOf(r);let newCard=false;if(first&&idx===S.order&&S.order<RECIPES.length-1){S.order++;newCard=true}
+  const unlocked=Object.entries(STATIONS).find(([k,v])=>v.unlock===uniqCooked()&&first);
+  save();render();
+  openSheet(`<div class="born" style="display:grid;gap:10px"><div class="eyebrow">${first?'新的食靈誕生了':'又做了一份'}</div>${spiritSVG(id,'pop')}<h2>${r.name}（${r.food}）</h2><p class="sub">${r.trait}</p>
+  ${newCard?`<p class="calm">拿到下一張食譜：${RECIPES[S.order].food}</p>`:''}${unlocked&&unlocked[1].unlock>0?`<p class="calm">解鎖新據點：${unlocked[1].name}</p>`:''}
+  <button class="btn" data-act="close">收進圖鑑</button></div>`);
+  vibrate();
+}
+
+/* ---------- phone sensor ---------- */
+let sensorOn=false,sensorMsg='手機感測器只在這個畫面開著時計步，關掉畫面就停。',avg=9.8,above=false,lastPeak=0,gotEvt=false,sensorTimer;
+function onMotion(e){const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;gotEvt=true;
+  const m=Math.hypot(a.x,a.y,a.z);avg=avg*.92+m*.08;const d=m-avg;const t=performance.now();
+  if(!above&&d>1.3&&t-lastPeak>300){above=true;lastPeak=t;addSteps(1)}else if(d<.3)above=false}
+async function toggleSensor(){
+  if(sensorOn){window.removeEventListener('devicemotion',onMotion);sensorOn=false;sensorMsg='已停止手機計步。';render();return}
+  try{if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function'){const p=await DeviceMotionEvent.requestPermission();if(p!=='granted'){sensorMsg='沒有取得動作感測器權限，請改用模擬按鈕。';render();return}}}
+  catch(e){sensorMsg='沒有取得動作感測器權限，請改用模擬按鈕。';render();return}
+  if(!('DeviceMotionEvent' in window)){sensorMsg='這個瀏覽器沒有動作感測器，請改用模擬按鈕。';render();return}
+  gotEvt=false;window.addEventListener('devicemotion',onMotion);sensorOn=true;sensorMsg='計步中，拿著手機走走看…';render();
+  clearTimeout(sensorTimer);sensorTimer=setTimeout(()=>{if(!gotEvt){window.removeEventListener('devicemotion',onMotion);sensorOn=false;sensorMsg='這個畫面讀不到手機感測器（在 Claude 預覽裡會被擋，電腦也沒有）。請改用模擬按鈕。';render()}},3000);
+}
+
+/* ---------- events ---------- */
+let resetArm=false;
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
+  switch(a){
+    case 'tab':S.tab=b.dataset.k;save();render();scrollTo(0,0);break;
+    case 'station':if(!S.route&&stationOpen(b.dataset.k)){S.station=b.dataset.k;save();render()}break;
+    case 'dir':sheetDir(b.dataset.d);break;
+    case 'go':startRoute(b.dataset.d,b.dataset.i);break;
+    case 'close':closeSheet();break;
+    case 'steps':addSteps(+b.dataset.n);break;
+    case 'ff':S.clock+=600000;addSteps(1000);break;
+    case 'day':S.clock+=864e5;checkDay();save();render();toast('時間快轉了 1 天，今日步數重新計算');break;
+    case 'boost':S.boostUntil=now()+3600e3;save();render();toast('步數加成 1.5×，接下來 1 小時有效（正式版為付費項目）');break;
+    case 'sensor':toggleSensor();break;
+    case 'toss':openToss();break;
+    case 'throw':doThrow();break;
+    case 'tossDone':closeSheet();break;
+    case 'cook':cook(b.dataset.id);break;
+    case 'settings':resetArm=false;sheetSettings();break;
+    case 'saveNick':{const v=document.getElementById('nickIn').value.trim();const err=checkNick(v);
+      if(err){document.getElementById('nickErr').textContent=err;break}
+      if(v===S.nick){closeSheet();break}
+      S.nick=v;S.nickAt=now();save();render();closeSheet();toast('暱稱已改成「'+v+'」，5 天後才能再改');break}
+    case 'goal':S.goal=+b.dataset.v;if(S.route){/* keep current route length */}save();render();sheetSettings();break;
+    case 'reset':if(!resetArm){resetArm=true;b.textContent='再按一次確定清除';break}
+      S=defaults();save();closeSheet();render();toast('進度已清除');break;
+    case 'stall':sheetStall(+b.dataset.i);break;
+    case 'putStall':S.stalls[+b.dataset.i]=b.dataset.id||null;save();closeSheet();render();break;
+    case 'pickf':pickF=b.dataset.f;render();break;
+    case 'send':if(pickF){S.mlog.unshift({me:true,f:pickF,s:b.dataset.s});S.mlog=S.mlog.slice(0,20);save();render();toast(`已送出「${b.dataset.s}」給 ${pickF}`)}break;
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.getElementById('sheetWrap').hidden&&!S.toss)closeSheet()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&sensorOn)sensorMsg='畫面切到背景時不會計步。'});
+setInterval(()=>{if(boosted()||S.boostUntil)scheduleRender()},30000);
+
+render();
+if(S.toss)setTimeout(openToss,300);
+</script>
